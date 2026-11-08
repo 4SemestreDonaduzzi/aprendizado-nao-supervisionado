@@ -1,0 +1,349 @@
+{
+  "scope": "Issues #2 e #3: dados e EDA; nenhum modelo treinado",
+  "eda_source": "official_train_only",
+  "seed": 42,
+  "validation_fraction": 0.15,
+  "python": "3.12.13",
+  "versions": {
+    "numpy": "2.1.3",
+    "torch": "2.5.1+cpu",
+    "scikit-learn": "1.5.2",
+    "matplotlib": "3.9.2",
+    "PyYAML": "6.0.2"
+  },
+  "source_files": {
+    "train-images-idx3-ubyte.gz": {
+      "sha256": "3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84",
+      "official_md5": "8d4fb7e6c68d591d4c3dfef9ec88bf0d"
+    },
+    "train-labels-idx1-ubyte.gz": {
+      "sha256": "a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845",
+      "official_md5": "25c81989df183df01b3e8a0aad5dffbe"
+    },
+    "t10k-images-idx3-ubyte.gz": {
+      "sha256": "346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073",
+      "official_md5": "bef4ecab320f06d8554ea6380940ec79"
+    },
+    "t10k-labels-idx1-ubyte.gz": {
+      "sha256": "67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5",
+      "official_md5": "bb300cfdad3c16e7a12a480ee83cd310"
+    }
+  },
+  "scenarios": {
+    "8": {
+      "anomaly_class": 8,
+      "anomaly_name": "Bag",
+      "excluded_official_train_anomalies": 6000,
+      "train_val_overlap": 0,
+      "same_seed_identical": true,
+      "splits": {
+        "train": {
+          "n": 45900,
+          "counts": [
+            5100,
+            5100,
+            5100,
+            5100,
+            5100,
+            5100,
+            5100,
+            5100,
+            0,
+            5100
+          ],
+          "source": "official_train",
+          "anomalies": 0,
+          "pixel_min": 0.0,
+          "pixel_max": 1.0,
+          "indices_sha256": "a154633e974313d07ce700b0575914f68519a4369fcf1b1fe0bebff6f6cca023"
+        },
+        "val": {
+          "n": 8100,
+          "counts": [
+            900,
+            900,
+            900,
+            900,
+            900,
+            900,
+            900,
+            900,
+            0,
+            900
+          ],
+          "source": "official_train",
+          "anomalies": 0,
+          "pixel_min": 0.0,
+          "pixel_max": 1.0,
+          "indices_sha256": "72bda9e96a42949c7474c3c962e03e8dc19c7a0a6433c03a8372aac4b2e89d07"
+        },
+        "test": {
+          "n": 10000,
+          "counts": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "source": "official_test",
+          "anomalies": 1000,
+          "pixel_min": 0.0,
+          "pixel_max": 1.0,
+          "indices_sha256": "9e1c19b3fdc185411bd1a987deb6a9fda2531116aac060a84c4d878854d1c099"
+        }
+      }
+    },
+    "5": {
+      "anomaly_class": 5,
+      "anomaly_name": "Sandal",
+      "excluded_official_train_anomalies": 6000,
+      "train_val_overlap": 0,
+      "same_seed_identical": true,
+      "splits": {
+        "train": {
+          "n": 45900,
+          "counts": [
+            5100,
+            5100,
+            5100,
+            5100,
+            5100,
+            0,
+            5100,
+            5100,
+            5100,
+            5100
+          ],
+          "source": "official_train",
+          "anomalies": 0,
+          "pixel_min": 0.0,
+          "pixel_max": 1.0,
+          "indices_sha256": "7fc4d34015a7a88f62d041ee2e5547c87453e76f0ec41201a1e9cbfdc877e393"
+        },
+        "val": {
+          "n": 8100,
+          "counts": [
+            900,
+            900,
+            900,
+            900,
+            900,
+            0,
+            900,
+            900,
+            900,
+            900
+          ],
+          "source": "official_train",
+          "anomalies": 0,
+          "pixel_min": 0.0,
+          "pixel_max": 1.0,
+          "indices_sha256": "d2a9397309c071d7a83dea089f290b7ba53c2bfa90e6ba5095fde02341cb0aa6"
+        },
+        "test": {
+          "n": 10000,
+          "counts": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "source": "official_test",
+          "anomalies": 1000,
+          "pixel_min": 0.0,
+          "pixel_max": 1.0,
+          "indices_sha256": "9e1c19b3fdc185411bd1a987deb6a9fda2531116aac060a84c4d878854d1c099"
+        }
+      }
+    }
+  },
+  "class_statistics_official_train": [
+    {
+      "class": 0,
+      "name": "T-shirt/top",
+      "n": 6000,
+      "mean_intensity": 0.3256077664399093,
+      "std_intensity": 0.35073913835927056,
+      "zero_pixel_fraction": 0.40587585034013607
+    },
+    {
+      "class": 1,
+      "name": "Trouser",
+      "n": 6000,
+      "mean_intensity": 0.22290531462585034,
+      "std_intensity": 0.3435304442657645,
+      "zero_pixel_fraction": 0.6513231292517007
+    },
+    {
+      "class": 2,
+      "name": "Pullover",
+      "n": 6000,
+      "mean_intensity": 0.37670102957849805,
+      "std_intensity": 0.3586802602710432,
+      "zero_pixel_fraction": 0.35128125
+    },
+    {
+      "class": 3,
+      "name": "Dress",
+      "n": 6000,
+      "mean_intensity": 0.2588976807389623,
+      "std_intensity": 0.3542196102144474,
+      "zero_pixel_fraction": 0.5720918367346939
+    },
+    {
+      "class": 4,
+      "name": "Coat",
+      "n": 6000,
+      "mean_intensity": 0.3853255118714152,
+      "std_intensity": 0.37631185727234956,
+      "zero_pixel_fraction": 0.3982689200680272
+    },
+    {
+      "class": 5,
+      "name": "Sandal",
+      "n": 6000,
+      "mean_intensity": 0.13673547669067626,
+      "std_intensity": 0.2631080887535445,
+      "zero_pixel_fraction": 0.678858630952381
+    },
+    {
+      "class": 6,
+      "name": "Shirt",
+      "n": 6000,
+      "mean_intensity": 0.3317847839135654,
+      "std_intensity": 0.33927863009379294,
+      "zero_pixel_fraction": 0.3708767006802721
+    },
+    {
+      "class": 7,
+      "name": "Sneaker",
+      "n": 6000,
+      "mean_intensity": 0.16769440109377085,
+      "std_intensity": 0.294786558999112,
+      "zero_pixel_fraction": 0.6620724914965986
+    },
+    {
+      "class": 8,
+      "name": "Bag",
+      "n": 6000,
+      "mean_intensity": 0.3535574621515273,
+      "std_intensity": 0.3652711767890642,
+      "zero_pixel_fraction": 0.41438520408163265
+    },
+    {
+      "class": 9,
+      "name": "Ankle boot",
+      "n": 6000,
+      "mean_intensity": 0.3011965427837802,
+      "std_intensity": 0.37053287559795617,
+      "zero_pixel_fraction": 0.5154800170068027
+    }
+  ],
+  "example_indices_official_train": {
+    "0": [
+      39584,
+      46763,
+      26243,
+      51725,
+      26622,
+      5751
+    ],
+    "1": [
+      45681,
+      30714,
+      43157,
+      44162,
+      47244,
+      58434
+    ],
+    "2": [
+      49495,
+      24206,
+      10835,
+      55474,
+      47198,
+      39211
+    ],
+    "3": [
+      53274,
+      49815,
+      3737,
+      16424,
+      32771,
+      51535
+    ],
+    "4": [
+      26903,
+      46917,
+      53902,
+      58358,
+      4170,
+      40960
+    ],
+    "5": [
+      9435,
+      2591,
+      55415,
+      44620,
+      32511,
+      40770
+    ],
+    "6": [
+      27555,
+      47187,
+      21430,
+      11086,
+      53963,
+      4598
+    ],
+    "7": [
+      33508,
+      9443,
+      13732,
+      39786,
+      56013,
+      26195
+    ],
+    "8": [
+      48054,
+      50227,
+      26593,
+      45869,
+      49580,
+      23846
+    ],
+    "9": [
+      8304,
+      47905,
+      50134,
+      11753,
+      48341,
+      531
+    ]
+  },
+  "hypotheses_before_training": [
+    "H1: Bag tende a maior erro/separação, sem garantia de ser o cenário mais fácil.",
+    "H2: Sandal pode ter falsos negativos por semelhança com calçados e grande área de fundo.",
+    "H3: Exemplos incomuns de classes normais podem produzir falsos positivos."
+  ],
+  "figures": [
+    "class_distribution_8.png",
+    "class_distribution_5.png",
+    "examples_by_class.png",
+    "mean_image_by_class.png",
+    "pixel_intensity_by_class.png",
+    "mean_intensity_per_image.png"
+  ]
+}

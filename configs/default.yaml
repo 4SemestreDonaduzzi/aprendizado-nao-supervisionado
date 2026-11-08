@@ -1,1 +1,7 @@
 seed: 42
+data:
+  directory: data
+  anomaly_class: 8  # Bag; altere para 5 (Sandal) no segundo cenário
+  validation_fraction: 0.15
+  batch_size: 128
+  num_workers: 0  # compatível com notebooks e Windows
