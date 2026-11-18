@@ -4,8 +4,9 @@ As funções recebem matrizes, não o modelo. Hoje elas rodam sobre os pixels
 brutos (N, 28, 28) ou (N, 784). Quando o Autoencoder existir, basta passar a
 saída de ``encode()`` com formato (N, dimensão_latente).
 
-- PCA é linear e preserva a variância global. As distâncias entre os grupos
-  têm significado geométrico.
+- PCA é linear e preserva a maior variância possível em 2D, mas descarta o
+  resto. Distâncias na figura são aproximadas: pontos próximos na projeção
+  podem estar distantes no espaço original.
 - t-SNE é não linear e preserva vizinhanças locais. Tamanhos de grupos e
   distâncias entre grupos NÃO devem ser interpretados. Use uma amostra de
   2 a 3 mil pontos, senão a execução fica lenta.
@@ -21,7 +22,9 @@ from sklearn.manifold import TSNE
 from .data import CLASS_NAMES
 
 NORMAL_COLOR = "#9aa5b1"
-ANOMALY_COLOR = "#d62728"
+# Magenta: fora da paleta tab10 usada em plot_by_class, para que a cor da
+# anomalia não se confunda com nenhuma classe (o vermelho da tab10 é Dress).
+ANOMALY_COLOR = "#e600e6"
 
 
 def as_matrix(features) -> np.ndarray:

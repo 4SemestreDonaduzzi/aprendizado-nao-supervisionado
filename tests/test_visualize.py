@@ -95,3 +95,13 @@ def test_plots_reject_mismatched_labels(blobs):
     features, labels = blobs
     with pytest.raises(ValueError):
         visualize.plot_by_class(features[:, :2], labels[:-1])
+
+
+def test_anomaly_color_is_not_a_class_color():
+    """A cor da anomalia não pode coincidir com nenhuma cor da tab10 nem com o cinza."""
+    from matplotlib.colors import to_hex
+
+    class_colors = {to_hex(c) for c in plt.get_cmap("tab10").colors}
+    anomaly = to_hex(visualize.ANOMALY_COLOR)
+    assert anomaly not in class_colors
+    assert anomaly != to_hex(visualize.NORMAL_COLOR)
