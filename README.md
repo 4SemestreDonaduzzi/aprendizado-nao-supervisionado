@@ -117,6 +117,11 @@ O teste fica reservado para a avaliação final após congelar as decisões.
 
 Fonte: [Fashion-MNIST — Zalando Research](https://github.com/zalandoresearch/fashion-mnist).
 
+## Relatório
+
+A metodologia, os resultados e a análise crítica do projeto ficam em
+[`docs/relatorio.md`](docs/relatorio.md). Este README cobre só a instalação e a execução.
+
 ## Estrutura
 
 - `src/autoencoder/`: código reutilizável do projeto.
