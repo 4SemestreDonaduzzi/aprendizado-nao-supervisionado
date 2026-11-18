@@ -1,0 +1,16 @@
+{
+  "source": "pixels brutos (teste oficial)",
+  "anomaly_class": 8,
+  "seed": 42,
+  "pca_points": 10000,
+  "pca_explained_variance": [
+    0.2917,
+    0.1764
+  ],
+  "tsne_points": 3000,
+  "tsne_perplexity": 30.0,
+  "figures": [
+    "reports/figures/pixels_pca_anomaly8.png",
+    "reports/figures/pixels_tsne_anomaly8.png"
+  ]
+}
