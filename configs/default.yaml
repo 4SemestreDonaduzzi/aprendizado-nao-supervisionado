@@ -5,3 +5,5 @@ data:
   validation_fraction: 0.15
   batch_size: 128
   num_workers: 0  # compatível com notebooks e Windows
+model:
+  latent_dim: 16  # testar também 8 e 32

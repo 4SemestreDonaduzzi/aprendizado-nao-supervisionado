@@ -83,6 +83,23 @@ lote e número de workers. `anomaly_class: 8` seleciona Bag; `5` seleciona Sanda
 O notebook explora os dois cenários, independentemente da classe padrão escolhida.
 `data.directory` é relativo à raiz do projeto, não à pasta em que o notebook foi aberto.
 
+### Autoencoder denso — issue #4
+
+`Autoencoder.from_config("configs/default.yaml")` carrega `model.latent_dim`
+(padrão 16; comparar também 8 e 32). Para imagens em lotes `(B, 1, 28, 28)`,
+use `images.flatten(1)` antes de chamar o modelo. A arquitetura é
+784 → 256 → 64 → latent_dim → 64 → 256 → 784; `encode()` e `decode()` também
+podem ser usados separadamente. `count_parameters()` informa o total treinável.
+
+A saída usa Sigmoid para limitar as intensidades reconstruídas ao intervalo
+`[0, 1]` das imagens normalizadas. A função padrão é MSE: ela mede erro quadrático
+entre intensidades contínuas. BCE modela cada pixel como Bernoulli e também é
+possível para alvos em `[0, 1]`, mas exige essa hipótese probabilística; para este
+baseline escolhemos MSE por ser uma comparação direta de intensidade. Um
+`latent_dim` maior reduz a compressão e pode permitir reconstruções melhores,
+mas deixa o gargalo menos restritivo e pode reduzir a capacidade de detectar
+anomalias pelo erro de reconstrução.
+
 ```python
 from autoencoder.data import load_config, load_splits, make_dataloaders
 
