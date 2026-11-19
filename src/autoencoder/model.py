@@ -21,7 +21,6 @@ class Autoencoder(nn.Module):
             nn.Linear(256, 64),
             nn.ReLU(),
             nn.Linear(64, latent_dim),
-            nn.ReLU(),
         )
         self.decoder = nn.Sequential(
             nn.Linear(latent_dim, 64),
@@ -43,10 +42,16 @@ class Autoencoder(nn.Module):
         return cls(latent_dim=model_config["latent_dim"])
 
     def encode(self, inputs: torch.Tensor) -> torch.Tensor:
-        """Mapeia imagens achatadas de formato (B, 784) ao gargalo latente."""
-        if inputs.ndim != 2 or inputs.shape[1] != 784:
-            raise ValueError("inputs deve ter formato (B, 784)")
-        return self.encoder(inputs)
+        """Mapeia imagens (B, 784) ou (B, 1, 28, 28) ao gargalo linear."""
+        return self.encoder(self._flatten(inputs))
+
+    @staticmethod
+    def _flatten(inputs: torch.Tensor) -> torch.Tensor:
+        if inputs.ndim == 2 and inputs.shape[1] == 784:
+            return inputs
+        if inputs.ndim == 4 and tuple(inputs.shape[1:]) == (1, 28, 28):
+            return inputs.flatten(1)
+        raise ValueError("inputs deve ter formato (B, 784) ou (B, 1, 28, 28)")
 
     def decode(self, latent: torch.Tensor) -> torch.Tensor:
         """Reconstrói entradas no intervalo [0, 1] a partir do espaço latente."""
@@ -55,7 +60,8 @@ class Autoencoder(nn.Module):
         return self.decoder(latent)
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        return self.decode(self.encode(inputs))
+        reconstruction = self.decode(self.encode(inputs))
+        return reconstruction.reshape_as(inputs)
 
     def count_parameters(self) -> int:
         """Retorna o número de parâmetros treináveis."""
