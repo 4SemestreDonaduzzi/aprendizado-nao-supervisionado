@@ -5,3 +5,11 @@ data:
   validation_fraction: 0.15
   batch_size: 128
   num_workers: 0  # compatível com notebooks e Windows
+model:
+  latent_dim: 16  # testar também 8 e 32
+
+training:
+  learning_rate: 0.001
+  patience: 5
+  min_delta: 0.00001
+  max_epochs: 50
