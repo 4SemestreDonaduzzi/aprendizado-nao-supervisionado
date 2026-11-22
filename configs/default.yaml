@@ -13,3 +13,4 @@ training:
   patience: 5
   min_delta: 0.00001
   max_epochs: 50
+
