@@ -1,0 +1,131 @@
+{
+  "fonte": "encode() sobre o teste oficial (10.000 imagens)",
+  "seed": 42,
+  "k_vizinhos": 10,
+  "tsne": {
+    "amostras": 3000,
+    "perplexity": 30.0
+  },
+  "cenarios": {
+    "bag": {
+      "classe_anomala": "Bag",
+      "latent_dim": 16,
+      "pca_variancia_explicada": [
+        0.3942,
+        0.2566
+      ],
+      "pureza_por_classe_latente": {
+        "T-shirt/top": 0.7321,
+        "Trouser": 0.926,
+        "Pullover": 0.6063,
+        "Dress": 0.77,
+        "Coat": 0.6284,
+        "Sandal": 0.8136,
+        "Shirt": 0.4832,
+        "Sneaker": 0.8715,
+        "Bag": 0.9181,
+        "Ankle boot": 0.9163
+      },
+      "pureza_por_classe_pixels": {
+        "T-shirt/top": 0.7553,
+        "Trouser": 0.9361,
+        "Pullover": 0.616,
+        "Dress": 0.7472,
+        "Coat": 0.601,
+        "Sandal": 0.6847,
+        "Shirt": 0.4895,
+        "Sneaker": 0.911,
+        "Bag": 0.8994,
+        "Ankle boot": 0.9317
+      },
+      "vizinhos_da_anomalia_latente": {
+        "T-shirt/top": 0.0085,
+        "Trouser": 0.001,
+        "Pullover": 0.0144,
+        "Dress": 0.0129,
+        "Coat": 0.0072,
+        "Sandal": 0.007,
+        "Shirt": 0.0223,
+        "Sneaker": 0.0063,
+        "Bag": 0.9181,
+        "Ankle boot": 0.0023
+      },
+      "vizinhos_da_anomalia_pixels": {
+        "T-shirt/top": 0.0103,
+        "Trouser": 0.0012,
+        "Pullover": 0.0228,
+        "Dress": 0.0083,
+        "Coat": 0.0141,
+        "Sandal": 0.002,
+        "Shirt": 0.0264,
+        "Sneaker": 0.0127,
+        "Bag": 0.8994,
+        "Ankle boot": 0.0028
+      },
+      "figuras": [
+        "reports/figures/latent_pca_bag.png",
+        "reports/figures/latent_tsne_bag.png"
+      ]
+    },
+    "sandal": {
+      "classe_anomala": "Sandal",
+      "latent_dim": 16,
+      "pca_variancia_explicada": [
+        0.3809,
+        0.2024
+      ],
+      "pureza_por_classe_latente": {
+        "T-shirt/top": 0.7225,
+        "Trouser": 0.9273,
+        "Pullover": 0.5801,
+        "Dress": 0.7611,
+        "Coat": 0.6153,
+        "Sandal": 0.8085,
+        "Shirt": 0.4778,
+        "Sneaker": 0.8309,
+        "Bag": 0.9192,
+        "Ankle boot": 0.9007
+      },
+      "pureza_por_classe_pixels": {
+        "T-shirt/top": 0.7553,
+        "Trouser": 0.9361,
+        "Pullover": 0.616,
+        "Dress": 0.7472,
+        "Coat": 0.601,
+        "Sandal": 0.6847,
+        "Shirt": 0.4895,
+        "Sneaker": 0.911,
+        "Bag": 0.8994,
+        "Ankle boot": 0.9317
+      },
+      "vizinhos_da_anomalia_latente": {
+        "T-shirt/top": 0.0004,
+        "Trouser": 0.0001,
+        "Pullover": 0.0005,
+        "Dress": 0.0004,
+        "Coat": 0.0002,
+        "Sandal": 0.8085,
+        "Shirt": 0.0008,
+        "Sneaker": 0.1027,
+        "Bag": 0.0067,
+        "Ankle boot": 0.0797
+      },
+      "vizinhos_da_anomalia_pixels": {
+        "T-shirt/top": 0.0085,
+        "Pullover": 0.0008,
+        "Dress": 0.0022,
+        "Coat": 0.0003,
+        "Sandal": 0.6847,
+        "Shirt": 0.0044,
+        "Sneaker": 0.1826,
+        "Bag": 0.0066,
+        "Ankle boot": 0.1099
+      },
+      "figuras": [
+        "reports/figures/latent_pca_sandal.png",
+        "reports/figures/latent_tsne_sandal.png"
+      ]
+    }
+  },
+  "figura_vizinhos": "reports/figures/latent_vizinhos_k10.png"
+}

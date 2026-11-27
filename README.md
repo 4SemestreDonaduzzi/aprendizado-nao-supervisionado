@@ -136,6 +136,29 @@ O teste fica reservado para a avaliação final após congelar as decisões.
 
 Fonte: [Fashion-MNIST — Zalando Research](https://github.com/zalandoresearch/fashion-mnist).
 
+## Visualizações — issue #7
+
+O notebook usa os checkpoints dos dois cenários (`models/ae_bag.pt` e
+`models/ae_sandal.pt`). `models/` não é versionado: treine antes, ou copie os
+checkpoints da equipe para essa pasta. Pesos treinados em outra máquina podem
+diferir um pouco dos checkpoints usados nos relatórios.
+
+```bash
+python scripts/train_cenarios.py --scenario bag
+python scripts/train_cenarios.py --scenario sandal
+python scripts/run_notebook.py notebooks/03_latent_space.ipynb
+```
+
+`run_notebook.py` executa qualquer notebook do zero em um kernel no próprio
+processo, como o `run_eda.py`; o Jupyter convencional também funciona.
+
+- `notebooks/03_latent_space.ipynb` (#7): extrai os latentes do teste com `encode()`,
+  projeta com PCA e t-SNE (por classe e normal × anomalia) e mede a mistura entre
+  classes pelos 10 vizinhos mais próximos nas 16 dimensões, sem distorção de projeção.
+  Figuras `latent_*.png`; números em `reports/latent_space_summary.json`.
+O código reutilizável fica em `src/autoencoder/inference.py` (carregar checkpoint
+e extrair latentes) e `src/autoencoder/visualize.py` (projeções e matriz de vizinhos).
+
 ## Estrutura
 
 - `src/autoencoder/`: código reutilizável do projeto.
