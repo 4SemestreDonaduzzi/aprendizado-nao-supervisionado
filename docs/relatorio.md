@@ -30,6 +30,7 @@ O projeto atende aos requisitos da disciplina:
 | Visualizações antes/depois da reconstrução | Seção 5.1 |
 | Exemplos de falhas | Seção 5.4 |
 | Análise crítica | Seções 6 e 7 |
+| Demonstração interativa (extra) | `app/app.py` (README, seção "Demonstração interativa") |
 
 ## 2. Por que o Fashion-MNIST
 

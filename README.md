@@ -27,6 +27,20 @@ Os dados são baixados automaticamente na primeira execução. Os modelos treina
 levemente diferentes dos que estão em `reports/` (ver seção 4.5 do relatório).
 Os notebooks também podem ser abertos e executados normalmente no Jupyter.
 
+### Demonstração interativa (opcional)
+
+Com os dois cenários treinados, abra a interface no navegador:
+
+```bash
+streamlit run app/app.py
+```
+
+Escolha a classe tratada como anomalia (Bag ou Sandal) e o limiar (P95 ou P99), filtre as
+imagens do teste por classe ou pelo resultado do detector (acerto, alarme falso,
+anomalia não detectada) e veja a original, a reconstrução, o mapa de erro e a decisão.
+A regra de decisão é a mesma da avaliação (`src/autoencoder/demo.py`), e há teste
+garantindo que as contagens do app batem com as de `scripts/evaluate.py`.
+
 ## Requisitos
 
 Python 3.11 ou 3.12. A implementação usa PyTorch; para reproduzir o ambiente de CPU, instale a distribuição CPU do PyTorch conforme as instruções oficiais e então instale as dependências do projeto.
