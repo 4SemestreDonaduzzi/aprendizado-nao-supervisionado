@@ -24,7 +24,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
-import torch  # noqa: E402
 
 from autoencoder.data import CLASS_NAMES, load_config, load_splits, make_dataloaders  # noqa: E402
 from autoencoder.evaluate import (  # noqa: E402
@@ -33,29 +32,11 @@ from autoencoder.evaluate import (  # noqa: E402
     evaluate_scenario,
     reconstruction_errors,
 )
-from autoencoder.model import Autoencoder  # noqa: E402
+from autoencoder.inference import SCENARIOS, load_trained_model  # noqa: E402
 from autoencoder.reproducibility import set_seed  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 PERCENTILES = (95, 99)
-
-# nome do cenário -> (classe anômala, checkpoint treinado SEM essa classe)
-SCENARIOS = {
-    "bag": (8, "models/ae_bag.pt"),
-    "sandal": (5, "models/ae_sandal.pt"),
-}
-
-
-def load_model(config_path: Path, checkpoint: Path) -> Autoencoder:
-    if not checkpoint.exists():
-        raise FileNotFoundError(
-            f"Checkpoint não encontrado: {checkpoint}\n"
-            "Treine o modelo deste cenário antes de avaliar (issue #5)."
-        )
-    model = Autoencoder.from_config(config_path)
-    model.load_state_dict(torch.load(checkpoint, map_location="cpu", weights_only=True))
-    model.eval()
-    return model
 
 
 def plot_histogram(test_errors, is_anomaly, thresholds, anomaly_name, path: Path) -> None:
@@ -110,7 +91,7 @@ def run_scenario(name: str, anomaly_class: int, checkpoint: Path, config_path: P
 
     splits = load_splits(config)
     loaders = make_dataloaders(splits, config.batch_size, config.num_workers)
-    model = load_model(config_path, checkpoint)
+    model = load_trained_model(config_path, checkpoint)
 
     val = reconstruction_errors(model, loaders["val"])
     test = reconstruction_errors(model, loaders["test"])
