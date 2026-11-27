@@ -105,3 +105,41 @@ def test_anomaly_color_is_not_a_class_color():
     anomaly = to_hex(visualize.ANOMALY_COLOR)
     assert anomaly not in class_colors
     assert anomaly != to_hex(visualize.NORMAL_COLOR)
+
+
+def test_neighbor_matrix_rows_sum_to_one_and_detect_separation(blobs):
+    features, labels = blobs
+    matrix, classes = visualize.neighbor_class_matrix(features, labels, k=5)
+    np.testing.assert_array_equal(classes, [0, 1, 8])
+    np.testing.assert_allclose(matrix.sum(axis=1), 1.0)
+    np.testing.assert_allclose(np.diag(matrix), 1.0)  # grupos separados: vizinhos da mesma classe
+
+
+def test_neighbor_matrix_excludes_self_and_reveals_mixing():
+    # Classe 8 sobreposta à classe 1 e longe da 0: deve "cair" junto da 1.
+    rng = np.random.default_rng(0)
+    features = np.concatenate([rng.normal(0, 1, (50, 3)), rng.normal(20, 1, (100, 3))])
+    labels = np.array([0] * 50 + [1, 8] * 50)
+    matrix, classes = visualize.neighbor_class_matrix(features, labels, k=10)
+    row = matrix[list(classes).index(8)]
+    assert row[0] == 0 and 0.3 < row[1] < 0.7
+    # Um único ponto de uma classe não pode ser vizinho de si mesmo.
+    lonely = np.array([[0.0], [0.1], [0.2], [5.0]])
+    matrix, _ = visualize.neighbor_class_matrix(lonely, np.array([0, 0, 0, 1]), k=1)
+    assert matrix[1, 1] == 0 and matrix[1, 0] == 1
+
+
+def test_neighbor_matrix_validates_inputs(blobs):
+    features, labels = blobs
+    with pytest.raises(ValueError):
+        visualize.neighbor_class_matrix(features, labels, k=len(labels))
+    with pytest.raises(ValueError):
+        visualize.neighbor_class_matrix(features, labels, classes=[0, 1])
+
+
+def test_neighbor_matrix_plot(blobs):
+    features, labels = blobs
+    matrix, classes = visualize.neighbor_class_matrix(features, labels, k=5)
+    fig = visualize.plot_neighbor_matrix(matrix, classes, "vizinhos", anomaly_class=8)
+    assert fig.axes[0].get_yticklabels()[-1].get_text().endswith("*")
+    plt.close(fig)

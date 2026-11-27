@@ -1,8 +1,8 @@
-"""Projeções 2D (PCA e t-SNE) e gráficos para qualquer matriz de atributos.
+"""Projeções 2D (PCA e t-SNE), vizinhanças por classe e gráficos.
 
-As funções recebem matrizes, não o modelo. Hoje elas rodam sobre os pixels
-brutos (N, 28, 28) ou (N, 784). Quando o Autoencoder existir, basta passar a
-saída de ``encode()`` com formato (N, dimensão_latente).
+As funções recebem matrizes, não o modelo: pixels brutos (N, 28, 28) ou
+(N, 784), ou a saída de ``encode()`` com formato (N, dimensão_latente).
+Para obter os latentes de um checkpoint, use ``inference``.
 
 - PCA é linear e preserva a maior variância possível em 2D, mas descarta o
   resto. Distâncias na figura são aproximadas: pontos próximos na projeção
@@ -15,9 +15,11 @@ saída de ``encode()`` com formato (N, dimensão_latente).
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from sklearn.neighbors import NearestNeighbors
 
 from .data import CLASS_NAMES
 
@@ -178,6 +180,53 @@ def plot_projection_panel(
                            ax=right, class_names=class_names, xlabel=xlabel, ylabel=ylabel)
     fig.suptitle(f"{method} sobre {source} (n = {len(coords)})")
     fig.tight_layout()
+    return fig
+
+
+def neighbor_class_matrix(features, labels, k: int = 10, classes=None):
+    """Composição dos k vizinhos mais próximos, medida no espaço ORIGINAL.
+
+    ``matrix[i, j]`` é a fração dos vizinhos de pontos da classe ``classes[i]``
+    que pertencem à classe ``classes[j]``; cada linha soma 1. A diagonal é a
+    pureza da vizinhança; a linha da anomalia mostra com quem ela se mistura.
+    Ao contrário de uma figura 2D, esta medida não sofre distorção da projeção.
+    Cada ponto é excluído da própria vizinhança.
+    """
+    matrix = as_matrix(features)
+    labels = _check_labels(labels, len(matrix))
+    if not 1 <= k < len(matrix):
+        raise ValueError("k deve estar entre 1 e N - 1")
+    classes = np.unique(labels) if classes is None else np.asarray(classes)
+    position = {int(c): i for i, c in enumerate(classes)}
+    if set(np.unique(labels).tolist()) - position.keys():
+        raise ValueError("classes não contém todos os rótulos presentes")
+    # kneighbors() sem argumentos exclui o próprio ponto de cada consulta.
+    neighbors = NearestNeighbors(n_neighbors=k).fit(matrix).kneighbors(return_distance=False)
+    rows = np.array([position[int(c)] for c in labels])
+    counts = np.zeros((len(classes), len(classes)))
+    np.add.at(counts, (np.repeat(rows, k), rows[neighbors].ravel()), 1)
+    totals = counts.sum(axis=1, keepdims=True)
+    return np.divide(counts, totals, out=np.zeros_like(counts), where=totals > 0), classes
+
+
+def plot_neighbor_matrix(matrix, classes, title: str = "", ax=None, class_names=CLASS_NAMES,
+                         anomaly_class: int | None = None):
+    """Mapa de calor de ``neighbor_class_matrix`` com os percentuais anotados."""
+    fig, ax = (plt.subplots(figsize=(7.5, 6.5)) if ax is None else (ax.figure, ax))
+    image = ax.imshow(matrix, cmap="Blues", vmin=0, vmax=1)
+    names = [class_names[int(c)] + (" *" if c == anomaly_class else "") for c in classes]
+    ax.set_xticks(range(len(classes)), names, rotation=45, ha="right")
+    ax.set_yticks(range(len(classes)), names)
+    for i in range(len(classes)):
+        for j in range(len(classes)):
+            value = matrix[i, j]
+            if value >= 0.005:
+                ax.text(j, i, f"{value:.0%}", ha="center", va="center", fontsize=7,
+                        color="white" if value > 0.55 else "#1e293b")
+    ax.set_xlabel("Classe do vizinho")
+    ax.set_ylabel("Classe do ponto")
+    ax.set_title(title)
+    fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04, format=PercentFormatter(1.0, decimals=0))
     return fig
 
 
