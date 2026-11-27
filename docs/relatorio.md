@@ -6,7 +6,7 @@
 > gerado por um experimento que de fato rodou. Nada estimado ou arredondado à mão
 > além do número de casas decimais.
 >
-> **Status:** seções 3 e 6 em escrita (⏳). Seção 5.5 depende da issue opcional #9.
+> **Status:** seção 6 em escrita (⏳). Seção 5.5 depende da issue opcional #9.
 
 Para instalar e executar o projeto, veja o [README](../README.md).
 
@@ -43,21 +43,21 @@ Ele foi escolhido por três motivos:
 
 **Limitação assumida desde o início:** o Fashion-MNIST não tem "defeitos". Simulamos anomalias tratando **uma classe inteira como anômala** e deixando-a fora do treino. Isso mede a capacidade de reconhecer *um tipo de objeto nunca visto*, que é mais fácil do que reconhecer um defeito sutil em um objeto conhecido. As conclusões devem ser lidas com essa ressalva (seção 7).
 
-## 3. Como funciona um Autoencoder ⏳
+## 3. Como funciona um Autoencoder
 
-<!--
-Seção a ser escrita pelo Áquila, com as próprias palavras. Responder, nesta ordem:
-1. O que são encoder, espaço latente (gargalo) e decoder?
-2. Por que um modelo que só aprende a copiar a entrada NÃO aprende simplesmente a identidade?
-3. O que é o erro de reconstrução e por que ele vira um "score" de anomalia?
-4. Por que treinar só com dados normais faz o modelo reconstruir mal o que é diferente?
-5. Quando essa ideia FALHA? (anomalia que o modelo reconstrói bem)
+```
+imagem (784) → ENCODER → espaço latente (16) → DECODER → reconstrução (784)
+```
 
-Fatos do nosso projeto que podem ser usados como exemplo:
-- Entrada de 784 números (28×28) comprimida para 16 no gargalo: 49 vezes menos.
-- A pergunta 5 tem resposta nos nossos próprios resultados: as sandálias "vazadas"
-  que escapam do detector (seção 5.4).
--->
+**Encoder, espaço latente e decoder.** O Autoencoder tem duas metades. O **encoder** recebe a imagem, com 784 números (um para cada pixel), e vai comprimindo essa informação até sobrarem só 16 números. Esses 16 números são o **espaço latente**: um "resumo" da imagem, com o que ela tem de mais importante. O **decoder** faz o caminho inverso: pega esse resumo e tenta reconstruir a imagem original, de volta com 784 números.
+
+**Por que o modelo não aprende simplesmente a copiar a entrada.** Porque ele não tem espaço para isso. No meio do caminho, a imagem precisa caber em 16 números, ou seja, 49 vezes menos informação do que os 784 pixels. Não dá para guardar cada detalhe, então o modelo é obrigado a aprender o que é essencial, como a forma geral de uma camiseta ou de um tênis, e descartar o resto. Esse "gargalo" é o que força o modelo a aprender padrões, em vez de decorar.
+
+**O erro de reconstrução como medidor de anomalia.** O erro de reconstrução mede o quanto a imagem devolvida pelo modelo ficou diferente da original. Se o modelo conhece bem aquele tipo de imagem, ele reconstrói bem, e o erro é pequeno. Se a imagem é de um tipo que ele não conhece, a reconstrução sai ruim, e o erro é grande. Basta então definir um limite: acima dele, a imagem é considerada uma anomalia (seção 4.6).
+
+**Por que treinar só com dados normais funciona.** Durante o treino, o modelo só aprendeu a resumir e reconstruir roupas e calçados. Ele nunca viu uma bolsa, então não sabe como "resumir" uma. Quando recebe uma bolsa, ele tenta encaixá-la no que conhece e devolve algo parecido com uma blusa ou outra peça que já viu. A reconstrução fica diferente da bolsa original, e o erro sobe. Nos nossos resultados, a Bag teve o maior erro médio de todas as classes (MSE 0,0312; seção 5.1).
+
+**Quando essa ideia falha.** Quando a anomalia é parecida com algo que o modelo já conhece. As sandálias são o melhor exemplo: o modelo as reconstruiu como se fossem tênis, que ele viu no treino. Além disso, a sandália é um objeto pequeno e cheio de espaços vazios, então a maior parte da imagem é fundo preto, e o fundo o modelo reconstrói perfeitamente. Com isso, o erro médio da imagem inteira fica baixo, mesmo com o objeto errado. Por isso o detector encontrou só 41% das sandálias, contra 71% das bolsas (seções 5.2 e 5.4).
 
 ## 4. Metodologia
 
