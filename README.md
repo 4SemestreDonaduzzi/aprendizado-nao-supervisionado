@@ -168,6 +168,29 @@ e extrair latentes) e `src/autoencoder/visualize.py` (projeções e matriz de vi
 - `reports/figures/`: figuras geradas pelos experimentos.
 - `app/`: espaço reservado para a demo Streamlit futura.
 
+## Reconstruções e falhas — issue #8
+
+`notebooks/04_reconstructions.ipynb` mostra o Autoencoder funcionando e falhando,
+com o limiar P95 da validação (decisão da issue #6): grades original | reconstruído |
+`|x − x̂|`, melhores e piores reconstruções, falsos positivos e falsos negativos
+(os mais extremos e uma amostra sorteada) e a explicação medida de cada tipo de
+falha, conectada às hipóteses da EDA. Ele também confere as métricas com
+`reports/resultados_deteccao.csv`.
+
+O notebook usa os checkpoints `models/ae_bag.pt` e `models/ae_sandal.pt`. `models/`
+não é versionado: treine antes (`python scripts/train_cenarios.py --scenario bag` e
+`--scenario sandal`) ou copie os checkpoints da equipe para essa pasta. Pesos
+treinados em outra máquina podem diferir um pouco dos usados nos relatórios.
+
+```bash
+python -m nbconvert --to notebook --execute --inplace notebooks/04_reconstructions.ipynb --ExecutePreprocessor.timeout=600
+```
+
+Figuras `reports/figures/recon_*.png` e `falsos_*.png`; números em
+`reports/reconstructions_summary.json`. O código reutilizável fica em
+`src/autoencoder/reconstructions.py` (reconstruções por imagem, seleção de
+falhas e grades).
+
 ## Decisões técnicas
 
 - **Framework:** PyTorch. O grupo consegue explicar o fluxo de treino passo a passo, importante para a apresentação, e a API permite expor o espaço latente diretamente. A versão 2.5.1 foi escolhida para Python 3.11/3.12 e mantida fixa; a instalação acima seleciona os wheels CPU.
