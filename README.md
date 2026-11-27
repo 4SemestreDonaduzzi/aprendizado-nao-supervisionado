@@ -83,6 +83,25 @@ lote e número de workers. `anomaly_class: 8` seleciona Bag; `5` seleciona Sanda
 O notebook explora os dois cenários, independentemente da classe padrão escolhida.
 `data.directory` é relativo à raiz do projeto, não à pasta em que o notebook foi aberto.
 
+### Autoencoder denso — issue #4
+
+`Autoencoder.from_config("configs/default.yaml")` carrega `model.latent_dim`
+(padrão 16; comparar também 8 e 32). O modelo aceita imagens em lotes `(B, 784)`
+ou `(B, 1, 28, 28)` e `forward()` devolve a reconstrução no mesmo formato da
+entrada. A arquitetura é
+784 → 256 → 64 → latent_dim → 64 → 256 → 784; `encode()` e `decode()` também
+podem ser usados separadamente. `count_parameters()` informa o total treinável.
+
+A saída usa Sigmoid para limitar as intensidades reconstruídas ao intervalo
+`[0, 1]` das imagens normalizadas. O gargalo é linear, sem ReLU, para preservar
+as dimensões latentes com valores positivos e negativos. A função padrão é MSE: ela mede erro quadrático
+entre intensidades contínuas. BCE modela cada pixel como Bernoulli e também é
+possível para alvos em `[0, 1]`, mas exige essa hipótese probabilística; para este
+baseline escolhemos MSE por ser uma comparação direta de intensidade. Um
+`latent_dim` maior reduz a compressão e pode permitir reconstruções melhores,
+mas deixa o gargalo menos restritivo e pode reduzir a capacidade de detectar
+anomalias pelo erro de reconstrução.
+
 ```python
 from autoencoder.data import load_config, load_splits, make_dataloaders
 
@@ -122,6 +141,29 @@ Fonte: [Fashion-MNIST — Zalando Research](https://github.com/zalandoresearch/f
 A metodologia, os resultados e a análise crítica do projeto ficam em
 [`docs/relatorio.md`](docs/relatorio.md). Este README cobre só a instalação e a execução.
 
+## Visualizações — issue #7
+
+O notebook usa os checkpoints dos dois cenários (`models/ae_bag.pt` e
+`models/ae_sandal.pt`). `models/` não é versionado: treine antes, ou copie os
+checkpoints da equipe para essa pasta. Pesos treinados em outra máquina podem
+diferir um pouco dos checkpoints usados nos relatórios.
+
+```bash
+python scripts/train_cenarios.py --scenario bag
+python scripts/train_cenarios.py --scenario sandal
+python scripts/run_notebook.py notebooks/03_latent_space.ipynb
+```
+
+`run_notebook.py` executa qualquer notebook do zero em um kernel no próprio
+processo, como o `run_eda.py`; o Jupyter convencional também funciona.
+
+- `notebooks/03_latent_space.ipynb` (#7): extrai os latentes do teste com `encode()`,
+  projeta com PCA e t-SNE (por classe e normal × anomalia) e mede a mistura entre
+  classes pelos 10 vizinhos mais próximos nas 16 dimensões, sem distorção de projeção.
+  Figuras `latent_*.png`; números em `reports/latent_space_summary.json`.
+O código reutilizável fica em `src/autoencoder/inference.py` (carregar checkpoint
+e extrair latentes) e `src/autoencoder/visualize.py` (projeções e matriz de vizinhos).
+
 ## Estrutura
 
 - `src/autoencoder/`: código reutilizável do projeto.
@@ -130,6 +172,29 @@ A metodologia, os resultados e a análise crítica do projeto ficam em
 - `configs/`: hiperparâmetros e sementes.
 - `reports/figures/`: figuras geradas pelos experimentos.
 - `app/`: espaço reservado para a demo Streamlit futura.
+
+## Reconstruções e falhas — issue #8
+
+`notebooks/04_reconstructions.ipynb` mostra o Autoencoder funcionando e falhando,
+com o limiar P95 da validação (decisão da issue #6): grades original | reconstruído |
+`|x − x̂|`, melhores e piores reconstruções, falsos positivos e falsos negativos
+(os mais extremos e uma amostra sorteada) e a explicação medida de cada tipo de
+falha, conectada às hipóteses da EDA. Ele também confere as métricas com
+`reports/resultados_deteccao.csv`.
+
+O notebook usa os checkpoints `models/ae_bag.pt` e `models/ae_sandal.pt`. `models/`
+não é versionado: treine antes (`python scripts/train_cenarios.py --scenario bag` e
+`--scenario sandal`) ou copie os checkpoints da equipe para essa pasta. Pesos
+treinados em outra máquina podem diferir um pouco dos usados nos relatórios.
+
+```bash
+python -m nbconvert --to notebook --execute --inplace notebooks/04_reconstructions.ipynb --ExecutePreprocessor.timeout=600
+```
+
+Figuras `reports/figures/recon_*.png` e `falsos_*.png`; números em
+`reports/reconstructions_summary.json`. O código reutilizável fica em
+`src/autoencoder/reconstructions.py` (reconstruções por imagem, seleção de
+falhas e grades).
 
 ## Decisões técnicas
 
