@@ -6,7 +6,7 @@
 > gerado por um experimento que de fato rodou. Nada estimado ou arredondado à mão
 > além do número de casas decimais.
 >
-> **Status:** seção 6 em escrita (⏳). Seção 5.5 depende da issue opcional #9.
+> **Status:** completo. A seção 5.5 (modelo convolucional) não foi realizada; ver limitações.
 
 Para instalar e executar o projeto, veja o [README](../README.md).
 
@@ -262,31 +262,30 @@ Fonte: issue #8 (Luiz), `reports/reconstructions_summary.json`, `reports/figures
 
 A medida "erro só no objeto" é um **diagnóstico**, não uma nova regra de detecção: ela foi calculada olhando o teste, então usá-la para ajustar o detector seria vazamento.
 
-### 5.5 Denso vs. convolucional (opcional) ⏳ #9
+### 5.5 Denso vs. convolucional
 
-## 6. Análise crítica ⏳
+Não realizado (issue opcional #9). Ver seção 7.
 
-<!--
-Seção a ser escrita pelo Áquila, com as próprias palavras.
+## 6. Análise crítica
 
-Perguntas que o texto precisa responder:
-1. As hipóteses H1, H2 e H3 se confirmaram? Alguma surpreendeu?
-2. Quando o Autoencoder funcionou bem, e quando falhou? Por quê?
-3. Por que a Sandal forma um grupo próprio no espaço latente (81%) e mesmo assim
-   é mal detectada (recall 0,41)? O que isso diz sobre usar o erro de reconstrução
-   como score?
-4. O espaço latente não organizou as classes melhor que os pixels (0,767 vs 0,757).
-   Isso é um fracasso do modelo? O que ele ganhou comprimindo 784 → 16?
-5. A anomalia aqui é uma classe inteira nunca vista. Até onde os resultados valem
-   para um problema real, como um defeito pequeno numa peça?
-6. O que faríamos diferente com mais tempo?
+**As hipóteses se confirmaram.** As três hipóteses registradas antes do treino (seção 4.3) se confirmaram. A Bag teve o maior erro de todas as classes e foi o cenário mais fácil (H1). As sandálias escaparam do detector por parecerem tênis e por terem muito fundo preto (H2). E as roupas com listras e estampas viraram falsos positivos (H3). O fato de as hipóteses terem sido escritas antes dos resultados é o que dá peso a essa confirmação.
 
-Fatos verificados que podem ser usados:
-- ROC-AUC 0,95 (Bag) vs 0,90 (Sandal); PR-AUC 0,60 vs 0,45.
-- Erro só no objeto: 96% dos FN da Sandal passariam do limiar (diagnóstico).
-- Treinos pararam no limite de 50 épocas, ainda melhorando.
-- Uma seed, um checkpoint por cenário.
--->
+**Quando o Autoencoder funcionou e quando falhou.** Ele funciona bem quando a anomalia tem um formato diferente de tudo o que ele viu no treino: no cenário Bag, o ROC-AUC foi 0,95 e o detector encontrou 71% das bolsas. Ele falha quando a anomalia se parece com algo conhecido: no cenário Sandal, o ROC-AUC caiu para 0,90 e o detector encontrou só 41% das sandálias. Ou seja, o Autoencoder não detecta "o que é diferente" em geral; ele detecta "o que ele não consegue imitar". Uma anomalia parecida com uma classe normal é imitada bem o suficiente para passar.
+
+**Separar não é o mesmo que detectar.** Um resultado que chamou atenção: no espaço latente, as sandálias formam um grupo próprio (81% dos vizinhos são sandálias), e mesmo assim o detector deixou passar a maioria delas. Isso acontece porque o detector não usa o espaço latente; ele usa o erro de reconstrução. E o erro é a média de todos os pixels: numa sandália, a maior parte da imagem é fundo preto, que o modelo reconstrói perfeitamente, então o erro no objeto fica "diluído". Medindo o erro só nos pixels do objeto, 96% dessas sandálias teriam sido detectadas. Essa medida foi calculada olhando o teste, então não pode ser usada como regra neste trabalho, mas indica um caminho: o problema não está só no modelo, está também em *como* o erro é medido.
+
+**O espaço latente não organizou melhor que os pixels.** A organização das classes no espaço latente foi praticamente igual à dos pixels brutos (pureza média de 0,767 contra 0,757). Isso não é um fracasso: o modelo conseguiu guardar a mesma estrutura usando 16 números em vez de 784, uma compressão de 49 vezes. Mas mostra que o Autoencoder não "entendeu" as classes melhor do que os próprios pixels; ele aprendeu a resumi-las.
+
+**O limiar é uma troca, não uma resposta certa.** Mesmo com ROC-AUC de 0,95, o detector com limiar P95 marca 475 imagens normais como anomalia no cenário Bag: 4 em cada 10 alertas são falsos. Com P99, os alarmes falsos caem cerca de 80%, mas o detector passa a encontrar só 21% das bolsas. Não existe limiar que resolva os dois problemas ao mesmo tempo; a escolha depende do que custa mais caro no problema real: deixar passar uma anomalia ou revisar um alarme falso.
+
+**Até onde os resultados valem.** Aqui, cada anomalia é uma classe inteira que o modelo nunca viu, o que é mais fácil do que o caso real mais comum, que é um defeito pequeno num objeto conhecido (um risco numa peça, uma costura torta). Pelo que vimos com as sandálias, um defeito pequeno provavelmente teria o mesmo problema de "diluição" do erro, e seria ainda mais difícil de detectar. Então os resultados mostram que a técnica funciona, mas não devem ser lidos como o desempenho esperado num problema real.
+
+**O que faríamos com mais tempo.**
+- Treinar por mais épocas, já que os modelos ainda melhoravam quando o treino parou (seção 4.5).
+- Repetir os treinos com várias seeds, para medir a variação dos resultados.
+- Testar um Autoencoder convolucional, que considera a vizinhança entre os pixels e tende a reconstruir melhor detalhes como listras (issue #9).
+- Testar outras dimensões do espaço latente (8 e 32).
+- Testar medidas de erro que deem mais peso ao objeto do que ao fundo, escolhendo a regra só com a validação.
 
 ## 7. Limitações
 
@@ -298,18 +297,3 @@ Fatos verificados que podem ser usados:
 6. **Escolha do percentil (P95) feita após ver o teste**, por isso os dois limiares são reportados.
 7. **Só dois cenários de anomalia** (Bag e Sandal), das 10 classes possíveis.
 8. **Hardware dos checkpoints oficiais não registrado**, o que dificulta reproduzir os números exatos em outra máquina.
-
-## 8. Roteiro da apresentação
-
-| # | Parte | Conteúdo | Quem apresenta |
-|---|---|---|---|
-| 1 | Problema | Seção 1 | ⏳ |
-| 2 | Como funciona um Autoencoder | Seção 3 | ⏳ |
-| 3 | Dados e estratégia contra vazamento | Seções 4.1–4.3 (#2, #3) | ⏳ |
-| 4 | Arquitetura e treinamento | Seções 4.4–4.5 (#4, #5) | ⏳ |
-| 5 | Detecção de anomalias | Seções 4.6 e 5.2 (#6) | ⏳ |
-| 6 | Espaço latente e falhas | Seções 5.3–5.4 (#7, #8) | ⏳ |
-| 7 | Demonstração (opcional) | Streamlit (#10) | ⏳ |
-| 8 | Análise crítica e limitações | Seções 6–7 | ⏳ |
-
-Sugestão: cada membro apresenta a parte que implementou.

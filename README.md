@@ -2,6 +2,31 @@
 
 Projeto acadêmico do 4º semestre de Biopark.
 
+**Projeto Final 1: Autoencoder.** Um Autoencoder treinado só com imagens normais do
+Fashion-MNIST comprime cada imagem de 784 para 16 números, reconstrói a imagem e usa
+o erro de reconstrução para detectar anomalias (uma classe nunca vista no treino).
+
+📄 **A metodologia, os resultados e a análise crítica estão em
+[`docs/relatorio.md`](docs/relatorio.md).** Este README cobre a instalação e a execução.
+
+### Reprodução completa (do zero)
+
+Depois da instalação (abaixo), a partir da raiz do projeto:
+
+```bash
+python scripts/train_cenarios.py --scenario bag      # ~2-3 min em CPU
+python scripts/train_cenarios.py --scenario sandal
+python scripts/evaluate.py                           # limiar, métricas e histogramas
+python scripts/run_notebook.py notebooks/01_eda.ipynb
+python scripts/run_notebook.py notebooks/03_latent_space.ipynb
+python scripts/run_notebook.py notebooks/04_reconstructions.ipynb
+```
+
+Os dados são baixados automaticamente na primeira execução. Os modelos treinados
+(`models/`) não são versionados; o treino em outra máquina pode gerar números
+levemente diferentes dos que estão em `reports/` (ver seção 4.5 do relatório).
+Os notebooks também podem ser abertos e executados normalmente no Jupyter.
+
 ## Requisitos
 
 Python 3.11 ou 3.12. A implementação usa PyTorch; para reproduzir o ambiente de CPU, instale a distribuição CPU do PyTorch conforme as instruções oficiais e então instale as dependências do projeto.
