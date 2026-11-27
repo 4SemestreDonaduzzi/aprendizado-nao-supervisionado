@@ -2,9 +2,11 @@
 
 > Compressão, reconstrução e detecção de anomalias no Fashion-MNIST.
 >
-> **Status:** esqueleto. Seções marcadas com ⏳ dependem de Issues ainda abertas.
-> Regra do documento: **todo número citado aqui vem de um arquivo em `reports/`**,
-> gerado por um experimento que de fato rodou. Nada estimado ou arredondado à mão.
+> **Regra do documento:** todo número citado aqui vem de um arquivo em `reports/`,
+> gerado por um experimento que de fato rodou. Nada estimado ou arredondado à mão
+> além do número de casas decimais.
+>
+> **Status:** seções 3 e 6 em escrita (⏳). Seção 5.5 depende da issue opcional #9.
 
 Para instalar e executar o projeto, veja o [README](../README.md).
 
@@ -12,134 +14,302 @@ Para instalar e executar o projeto, veja o [README](../README.md).
 
 ## 1. O problema
 
-<!--
-Responder em 1–2 parágrafos:
-- O que é detecção de anomalias e por que ela é um problema de aprendizado NÃO supervisionado?
-- Por que, no mundo real, é comum ter muitos exemplos "normais" e poucos (ou nenhum) exemplos de anomalia?
-- O que o professor pediu (compressão, reconstrução, espaço latente, erro, anomalias)?
--->
+Detectar anomalias é encontrar exemplos que fogem do padrão: uma peça com defeito numa linha de produção, uma transação fraudulenta, um exame fora do normal. Na prática, esse problema costuma ter uma característica em comum: **há muitos exemplos normais e pouquíssimos (ou nenhum) exemplos de anomalia**. Além disso, as anomalias futuras podem ser de tipos que nunca foram vistos.
+
+Por isso, em vez de treinar um classificador com exemplos dos dois tipos, este projeto segue a abordagem de **aprendizado não supervisionado**: o modelo aprende apenas como os dados normais se parecem e marca como anomalia aquilo que ele não consegue reproduzir bem.
+
+O projeto atende aos requisitos da disciplina:
+
+| Requisito | Onde está |
+|---|---|
+| Escolher uma base de dados | Seção 2 |
+| Treinar um Autoencoder para reconstruir os dados | Seções 4.4 e 4.5 |
+| Analisar o espaço latente | Seção 5.3 |
+| Analisar o erro de reconstrução | Seções 5.1 e 5.2 |
+| Usar o erro para detectar anomalias | Seções 4.6 e 5.2 |
+| Visualizações antes/depois da reconstrução | Seção 5.1 |
+| Exemplos de falhas | Seção 5.4 |
+| Análise crítica | Seções 6 e 7 |
 
 ## 2. Por que o Fashion-MNIST
 
-<!--
-- O que é a base: 70 mil imagens 28×28 em tons de cinza, 10 classes de roupas e acessórios.
-- Por que ela e não outra (visualização intuitiva, rótulos para medir a detecção, treina em CPU).
-- A LIMITAÇÃO, dita com honestidade aqui mesmo: a anomalia é artificial (uma classe
-  que o modelo nunca viu), não um defeito real. O que isso permite e o que NÃO permite concluir?
--->
+O [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist) tem 70 mil imagens de 28×28 pixels em tons de cinza, divididas em 10 classes de roupas e acessórios (60 mil para treino e 10 mil para teste, com 1.000 imagens por classe no teste).
 
-## 3. Como funciona um Autoencoder
+Ele foi escolhido por três motivos:
+
+1. **Visualização intuitiva:** qualquer pessoa vê se a reconstrução de uma camiseta ficou boa ou borrada, o que torna os resultados explicáveis na apresentação.
+2. **Rótulos disponíveis:** o Autoencoder é treinado sem rótulos, mas os rótulos permitem *medir* a detecção (ROC-AUC, precisão, recall) e colorir o espaço latente por classe.
+3. **Viável em CPU:** cada treino leva poucos minutos, então todos os membros conseguem reproduzir os experimentos.
+
+**Limitação assumida desde o início:** o Fashion-MNIST não tem "defeitos". Simulamos anomalias tratando **uma classe inteira como anômala** e deixando-a fora do treino. Isso mede a capacidade de reconhecer *um tipo de objeto nunca visto*, que é mais fácil do que reconhecer um defeito sutil em um objeto conhecido. As conclusões devem ser lidas com essa ressalva (seção 7).
+
+## 3. Como funciona um Autoencoder ⏳
 
 <!--
-Esta é a seção que o professor mais vai perguntar. Escrever com as próprias palavras.
-Responder, nesta ordem:
+Seção a ser escrita pelo Áquila, com as próprias palavras. Responder, nesta ordem:
 1. O que são encoder, espaço latente (gargalo) e decoder?
 2. Por que um modelo que só aprende a copiar a entrada NÃO aprende simplesmente a identidade?
 3. O que é o erro de reconstrução e por que ele vira um "score" de anomalia?
 4. Por que treinar só com dados normais faz o modelo reconstruir mal o que é diferente?
 5. Quando essa ideia FALHA? (anomalia que o modelo reconstrói bem)
-Sugestão: um diagrama simples (entrada 784 → ... → latente → ... → saída 784).
+
+Fatos do nosso projeto que podem ser usados como exemplo:
+- Entrada de 784 números (28×28) comprimida para 16 no gargalo: 49 vezes menos.
+- A pergunta 5 tem resposta nos nossos próprios resultados: as sandálias "vazadas"
+  que escapam do detector (seção 5.4).
 -->
 
 ## 4. Metodologia
 
 ### 4.1 Dados e divisão dos conjuntos
 
-<!--
-Fonte: Issue #2, README (seção Dados) e reports/eda_summary.json.
-- Estratégia one-class: a classe anômala é removida ANTES de dividir treino/validação.
-- Tabela dos conjuntos (copiar os números de eda_summary.json, não de memória).
-- Dois cenários: Bag (8) e Sandal (5). Por que dois?
--->
+Fonte: issue #2 (Rafael), `reports/eda_summary.json`.
+
+A estratégia é **one-class**: o modelo só vê a classe normal durante o treino. A classe anômala é removida do treino oficial **antes** da divisão entre treino e validação, e a divisão é estratificada (mesma proporção de cada classe nos dois conjuntos), com seed fixa (42).
+
+Cenário com **Bag** como anomalia:
+
+| Conjunto | Origem | Imagens | Por classe | Anomalias |
+|---|---|---:|---:|---:|
+| Treino | treino oficial, 85% | 45.900 | 5.100 (9 classes) | 0 |
+| Validação | treino oficial, 15% | 8.100 | 900 (9 classes) | 0 |
+| Teste | teste oficial | 10.000 | 1.000 (10 classes) | 1.000 |
+
+O cenário com **Sandal** como anomalia tem os mesmos tamanhos, trocando a classe excluída.
+
+**Por que dois cenários?** Para comparar uma anomalia de formato bem diferente das demais classes (Bag) com uma anomalia parecida com classes normais (Sandal, próxima de Sneaker e Ankle boot). Isso mostra quando o método funciona e quando ele tem dificuldade.
 
 ### 4.2 Como evitamos vazamento de dados
 
-<!--
-- O que é vazamento de dados e por que ele gera resultados "bonitos e falsos".
-- As três regras do projeto:
-  (a) treino e validação nunca contêm a classe anômala;
-  (b) o limiar é escolhido SÓ com erros da validação;
-  (c) o teste é usado apenas uma vez, para medir.
-- Como verificamos (testes automatizados de #2 e #6).
--->
+Vazamento de dados acontece quando uma informação que não estaria disponível no uso real influencia o treino ou as decisões do modelo. O resultado é um desempenho "bonito e falso". O projeto segue três regras:
+
+1. **Treino e validação nunca contêm a classe anômala.** Verificado por teste automatizado (#2) e confirmado nas tabelas por classe da avaliação (#6).
+2. **O limiar de anomalia é escolhido somente com os erros da validação.** Há um teste automatizado provando que mudar os dados de teste não muda o limiar (#6).
+3. **O conjunto de teste é usado apenas para medir**, depois que todas as decisões foram tomadas.
+
+Durante o projeto, essa regra pegou um problema real: uma versão do script de treino usava uma divisão própria, e a maior parte da validação oficial teria caído no treino desse script. O limiar seria calculado sobre imagens já vistas. O problema foi identificado na revisão e corrigido antes do merge (PR #16).
 
 ### 4.3 Análise exploratória e hipóteses (registradas antes do treino)
 
-<!--
-Fonte: Issue #3, notebooks/01_eda.ipynb, reports/validacao_dados_eda.md.
-- Resumir as hipóteses H1, H2... COM A DATA em que foram registradas (PR #12, 08/11/2026).
-- Por que registrar antes do treino importa? (evita ajustar a hipótese ao resultado)
-- Linha de base nos pixels brutos (PR #13): PCA e t-SNE antes de qualquer modelo.
--->
+Fonte: issue #3 (Rafael), `notebooks/01_eda.ipynb`, `reports/validacao_dados_eda.md`.
 
-### 4.4 Arquitetura do Autoencoder ⏳ #4
+As hipóteses abaixo foram registradas em 08/11/2026 (PR #12), **antes de qualquer modelo ser treinado**. Isso importa: hipóteses escritas depois dos resultados tendem a ser ajustadas para combinar com eles.
 
-<!--
-- Camadas, dimensão latente, ativações, nº de parâmetros.
-- Função de perda escolhida (MSE ou BCE) e por quê.
--->
+| Hipótese | Enunciado |
+|---|---|
+| H1 | A Bag tende a ter maior erro e mais separação, sem garantia de ser o cenário mais fácil. |
+| H2 | A Sandal pode gerar falsos negativos, por semelhança com outros calçados e pela grande área de fundo. |
+| H3 | Exemplos incomuns de classes normais podem gerar falsos positivos. |
 
-### 4.5 Treinamento ⏳ #5
+**Linha de base nos pixels brutos** (PR #13, Luiz): antes do modelo, projetamos os próprios pixels com PCA e t-SNE (`reports/figures/pixels_*_anomaly8.png`). Isso permite comparar depois se o espaço latente organiza os dados melhor do que os pixels sozinhos (seção 5.3).
 
-<!--
-- Otimizador, learning rate, batch size, épocas, early stopping.
-- Figura: curvas de loss de treino e validação. Houve overfitting?
-- Tempo de treino e hardware.
--->
+### 4.4 Arquitetura do Autoencoder
 
-### 4.6 Limiar e métricas ⏳ #6
+Fonte: issue #4 (Eduardo), `src/autoencoder/model.py`.
 
-<!--
-- Como o limiar foi definido (percentil da validação) e por que esse percentil.
-- O que cada métrica mede e por que usamos: MSE/MAE, ROC-AUC, PR-AUC, Precision/Recall/F1.
-- Linha de base: detector por erro de reconstrução do PCA (para comparar com o Autoencoder).
--->
+```
+Entrada 28×28 → 784
+Encoder:  784 → 256 → 64 → 16     (ReLU nas camadas ocultas; gargalo linear)
+Decoder:   16 → 64 → 256 → 784    (ReLU nas camadas ocultas; Sigmoid na saída)
+Saída 784 → 28×28
+```
 
-## 5. Resultados ⏳ #6, #7, #8, #9
+- **Dimensão latente:** 16, ou seja, cada imagem é comprimida de 784 para 16 números.
+- **Parâmetros:** 437.664.
+- **Saída com Sigmoid:** limita os pixels reconstruídos ao intervalo [0, 1], o mesmo dos pixels de entrada.
+- **Gargalo linear:** a primeira versão tinha ReLU no gargalo. Na revisão do PR #15, o treino mostrou que parte das 16 dimensões "morria" (sempre zero) e a reconstrução piorava. O ReLU foi removido.
+- **Função de perda:** MSE (erro quadrático médio por pixel), uma comparação direta de intensidade.
+- O modelo aceita tanto `(B, 784)` quanto `(B, 1, 28, 28)` e devolve a reconstrução no mesmo formato, para que um modelo convolucional (#9) possa ser trocado sem mudar o resto do código.
+
+### 4.5 Treinamento
+
+Fonte: issues #5 (William) e #6 (Letícia), `reports/history_bag.json`, `reports/history_sandal.json`.
+
+| Hiperparâmetro | Valor |
+|---|---|
+| Otimizador | Adam |
+| Learning rate | 0,001 |
+| Batch size | 128 |
+| Máximo de épocas | 50 |
+| Early stopping | paciência de 5 épocas, melhora mínima de 0,00001 na perda de validação |
+| Hardware | não registrado nos checkpoints oficiais (o `scripts/train.py` da #5 passou a registrar) |
+
+| Cenário | Épocas treinadas | Melhor época | Perda de validação (MSE) | Perda de treino final |
+|---|---:|---:|---:|---:|
+| Bag | 50 | 50 | 0,009858 | 0,009651 |
+| Sandal | 50 | 49 | 0,010036 | 0,009755 |
+
+![Curvas de treino, cenário Bag](../reports/figures/loss_curves_bag.png)
+
+- **Não houve overfitting:** as curvas de treino e validação ficam praticamente juntas até o fim.
+- **O early stopping não foi acionado:** os dois treinos atingiram o limite de 50 épocas e o modelo ainda estava melhorando, levemente. Mais épocas poderiam reduzir um pouco a perda (seção 7).
+- **Reprodutibilidade:** na mesma máquina, o treino com a seed 42 é determinístico. Entre máquinas com número diferente de threads de CPU, os números variam levemente; por isso, todos os resultados deste relatório vêm dos **mesmos checkpoints** (`ae_bag.pt` e `ae_sandal.pt`).
+
+### 4.6 Limiar e métricas
+
+Fonte: issue #6 (Letícia), `src/autoencoder/evaluate.py`, `reports/avaliacao_deteccao.md`.
+
+**Regra de decisão:** uma imagem é marcada como anomalia quando o seu erro de reconstrução (MSE) é maior que um limiar. O limiar é um **percentil dos erros da validação**, que só tem imagens normais:
+
+- **P95:** cerca de 5% das imagens normais ficam acima do limiar (são marcadas por engano). Mais sensível.
+- **P99:** cerca de 1% das normais ficam acima. Mais conservador.
+
+**Métricas usadas:**
+
+| Métrica | O que mede | Depende do limiar? |
+|---|---|---|
+| MSE / MAE / RMSE | Qualidade da reconstrução | Não |
+| ROC-AUC | Probabilidade de uma anomalia ter erro maior que uma imagem normal | Não |
+| PR-AUC | Precisão média ao longo dos possíveis limiares; mais exigente quando as anomalias são raras (10% do teste) | Não |
+| Precisão | Das imagens marcadas como anomalia, quantas eram mesmo | Sim |
+| Recall | Das anomalias reais, quantas foram encontradas | Sim |
+| F1 | Equilíbrio entre precisão e recall | Sim |
+
+O grupo adotou o **P95** como limiar principal, porque neste problema deixar passar uma anomalia é mais grave do que revisar alguns alarmes falsos. Essa escolha foi feita depois de ver os resultados do teste, por isso os dois limiares são reportados completos (seção 5.2).
+
+## 5. Resultados
 
 ### 5.1 Reconstrução
 
-<!-- Figura original | reconstruído | mapa de erro. Métricas por classe. -->
+Fonte: `reports/resultados_por_classe.csv`, `reports/figures/recon_*.png`.
+
+Erro de reconstrução médio (MSE) no teste, por classe:
+
+| Classe | Cenário Bag | Cenário Sandal |
+|---|---:|---:|
+| **Bag** | **0,0312** (anômala) | 0,0176 |
+| **Sandal** | 0,0167 | **0,0260** (anômala) |
+| Ankle boot | 0,0108 | 0,0108 |
+| Shirt | 0,0108 | 0,0107 |
+| T-shirt/top | 0,0101 | 0,0099 |
+| Dress | 0,0099 | 0,0099 |
+| Pullover | 0,0097 | 0,0098 |
+| Coat | 0,0092 | 0,0092 |
+| Sneaker | 0,0080 | 0,0082 |
+| Trouser | 0,0052 | 0,0050 |
+
+Nos dois cenários, a classe anômala tem o **maior erro médio de todas**. A segunda maior é sempre a outra classe "difícil".
+
+![Exemplos por classe: original, reconstrução e mapa de erro](../reports/figures/recon_por_classe_bag.png)
+
+Composição das 100 melhores e 100 piores reconstruções do teste (saída de `notebooks/04_reconstructions.ipynb`):
+
+| | Cenário Bag | Cenário Sandal |
+|---|---|---|
+| 100 melhores | Trouser 81, T-shirt/top 10, outras 9 | Trouser 93, outras 7 |
+| 100 piores | **Bag 60**, Sandal 12, outras 28 | **Sandal 71**, outras 29 |
+
+- **Melhores:** calças, de silhueta simples (`recon_melhores_*.png`).
+- **Piores:** dominadas pela classe anômala (`recon_piores_*.png`).
 
 ### 5.2 Detecção de anomalias
 
-<!-- Tabela: cenário Bag vs. Sandal, Autoencoder vs. PCA. Histograma dos erros. -->
+Fonte: `reports/resultados_deteccao.csv`.
+
+| Cenário | Limiar | ROC-AUC | PR-AUC | Precisão | Recall | F1 | Falsos positivos | Falsos negativos |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Bag | P95 | 0,9516 | 0,5972 | 0,599 | 0,710 | 0,650 | 475 | 290 |
+| Bag | P99 | 0,9516 | 0,5972 | 0,682 | 0,210 | 0,321 | 98 | 790 |
+| Sandal | P95 | 0,8955 | 0,4523 | 0,467 | 0,406 | 0,435 | 463 | 594 |
+| Sandal | P99 | 0,8955 | 0,4523 | 0,635 | 0,155 | 0,249 | 89 | 845 |
+
+![Distribuição do erro, cenário Sandal](../reports/figures/hist_erro_sandal.png)
+
+- **A Bag é mais fácil de detectar que a Sandal** em todas as métricas.
+- **ROC-AUC alto não significa detector pronto:** com P95, no cenário Bag, 4 em cada 10 imagens marcadas são alarmes falsos (precisão 0,599).
+- **Trocar P95 por P99** reduz os falsos positivos em ~80%, mas o recall cai para cerca de um terço.
 
 ### 5.3 Espaço latente
 
-<!-- PCA e t-SNE do espaço latente vs. dos pixels brutos. Métrica de vizinhos (não só a figura). -->
+Fonte: issue #7 (Luiz), `reports/latent_space_summary.json`, `reports/figures/latent_*.png`.
+
+Para medir a organização sem a distorção das figuras 2D, calculamos, para cada imagem, **que fração dos 10 vizinhos mais próximos é da mesma classe**, nas 16 dimensões do espaço latente e nos 784 pixels.
+
+| Medida | Cenário Bag | Cenário Sandal |
+|---|---:|---:|
+| Pureza média dos vizinhos, espaço latente (16 dim.) | 0,767 | 0,754 |
+| Pureza média dos vizinhos, pixels (784 dim.) | 0,757 | 0,757 |
+| Variância explicada pelos 2 primeiros componentes do PCA | 65% | 58% |
+
+![t-SNE do espaço latente, cenário Bag](../reports/figures/latent_tsne_bag.png)
+
+- **As classes se organizam em grupos sem que o modelo tenha visto rótulos.** Trouser, Ankle boot, Bag e Sneaker têm mais de 83% de vizinhos da mesma classe; as peças de parte superior se misturam (Shirt ≈ 48%).
+- **Comprimir 784 → 16 manteve a organização dos pixels, mas não a melhorou** (pureza média praticamente igual).
+- **Bag (anomalia):** forma um grupo próprio, com 92% de vizinhos Bag, mesmo sem nunca ter sido vista no treino.
+- **Sandal (anomalia):** 81% de vizinhos Sandal, mas dentro da região dos calçados (10% Sneaker, 8% Ankle boot).
+- No PCA, a Bag parece misturada com blusas. Isso é efeito da projeção: 2 componentes guardam só 65% da variância.
 
 ### 5.4 Exemplos de falhas
 
-<!-- Falsos positivos e falsos negativos, cada um com o provável motivo. -->
+Fonte: issue #8 (Luiz), `reports/reconstructions_summary.json`, `reports/figures/falsos_*.png`. Limiar P95.
+
+**Falsos negativos da Sandal** (594 sandálias não detectadas):
+
+![Falsos negativos, cenário Sandal](../reports/figures/falsos_negativos_sandal.png)
+
+- 81% delas têm Sneaker como classe normal mais próxima no espaço latente: o modelo as reconstrói **como um tênis**.
+- O erro no objeto é alto, mas o fundo preto ocupa a maior parte da imagem e dilui o MSE. Medindo o erro **só nos pixels do objeto**, 96% desses falsos negativos ficariam acima do limiar.
+- Confirma a **H2**.
+
+**Falsos negativos da Bag** (290 bolsas não detectadas): bolsas retangulares e lisas são reconstruídas como blusas; 27% têm Shirt como classe normal mais próxima no latente.
+
+**Falsos positivos** (imagens normais marcadas como anomalia):
+
+![Falsos positivos, cenário Bag](../reports/figures/falsos_positivos_bag.png)
+
+- São principalmente roupas com listras, xadrez e estampas: o gargalo de 16 números devolve uma peça "média" e lisa. Confirma a **H3**.
+- A maior fonte de falsos positivos em cada cenário é a outra classe difícil: 16,6% das sandálias no cenário Bag e 16,6% das bolsas no cenário Sandal.
+
+A medida "erro só no objeto" é um **diagnóstico**, não uma nova regra de detecção: ela foi calculada olhando o teste, então usá-la para ajustar o detector seria vazamento.
 
 ### 5.5 Denso vs. convolucional (opcional) ⏳ #9
 
 ## 6. Análise crítica ⏳
 
 <!--
-Escrever por último, mas pensar desde já:
-- As hipóteses da seção 4.3 se confirmaram? Quais não, e por quê?
-- Quando o Autoencoder funcionou e quando falhou?
-- O Autoencoder foi melhor que a linha de base do PCA? Se não, o que isso diz?
-- A anomalia artificial (classe nunca vista): até onde os resultados valem para um problema real?
-- O que faríamos diferente com mais tempo?
+Seção a ser escrita pelo Áquila, com as próprias palavras.
+
+Perguntas que o texto precisa responder:
+1. As hipóteses H1, H2 e H3 se confirmaram? Alguma surpreendeu?
+2. Quando o Autoencoder funcionou bem, e quando falhou? Por quê?
+3. Por que a Sandal forma um grupo próprio no espaço latente (81%) e mesmo assim
+   é mal detectada (recall 0,41)? O que isso diz sobre usar o erro de reconstrução
+   como score?
+4. O espaço latente não organizou as classes melhor que os pixels (0,767 vs 0,757).
+   Isso é um fracasso do modelo? O que ele ganhou comprimindo 784 → 16?
+5. A anomalia aqui é uma classe inteira nunca vista. Até onde os resultados valem
+   para um problema real, como um defeito pequeno numa peça?
+6. O que faríamos diferente com mais tempo?
+
+Fatos verificados que podem ser usados:
+- ROC-AUC 0,95 (Bag) vs 0,90 (Sandal); PR-AUC 0,60 vs 0,45.
+- Erro só no objeto: 96% dos FN da Sandal passariam do limiar (diagnóstico).
+- Treinos pararam no limite de 50 épocas, ainda melhorando.
+- Uma seed, um checkpoint por cenário.
 -->
 
 ## 7. Limitações
 
-<!-- Lista honesta: dataset, anomalia artificial, CPU, uma seed, etc. -->
+1. **Anomalia artificial:** cada anomalia é uma classe inteira nunca vista, não um defeito sutil. O desempenho em defeitos reais tende a ser pior.
+2. **Uma única seed e um checkpoint por cenário:** não medimos a variação entre treinos. Os números podem mudar levemente com outra seed ou outra máquina.
+3. **Treino limitado a 50 épocas:** o early stopping não foi acionado; os modelos ainda melhoravam.
+4. **Um único modelo:** Autoencoder denso, dimensão latente 16. Não testamos outros valores de `latent_dim` nem uma arquitetura convolucional (#9, opcional).
+5. **O MSE na imagem inteira dilui erros em objetos pequenos**, como mostram os falsos negativos da Sandal.
+6. **Escolha do percentil (P95) feita após ver o teste**, por isso os dois limiares são reportados.
+7. **Só dois cenários de anomalia** (Bag e Sandal), das 10 classes possíveis.
+8. **Hardware dos checkpoints oficiais não registrado**, o que dificulta reproduzir os números exatos em outra máquina.
 
 ## 8. Roteiro da apresentação
 
-<!--
-1. Problema (1 slide)
-2. Como funciona um Autoencoder (1–2 slides)
-3. Dados e estratégia contra vazamento (1 slide)
-4. Arquitetura e treinamento (1 slide)
-5. Resultados: reconstrução, detecção, espaço latente (2–3 slides)
-6. Demonstração ao vivo (Streamlit, #10)
-7. Falhas e análise crítica (1–2 slides)
-8. Conclusão
-Quem apresenta cada parte?
--->
+| # | Parte | Conteúdo | Quem apresenta |
+|---|---|---|---|
+| 1 | Problema | Seção 1 | ⏳ |
+| 2 | Como funciona um Autoencoder | Seção 3 | ⏳ |
+| 3 | Dados e estratégia contra vazamento | Seções 4.1–4.3 (#2, #3) | ⏳ |
+| 4 | Arquitetura e treinamento | Seções 4.4–4.5 (#4, #5) | ⏳ |
+| 5 | Detecção de anomalias | Seções 4.6 e 5.2 (#6) | ⏳ |
+| 6 | Espaço latente e falhas | Seções 5.3–5.4 (#7, #8) | ⏳ |
+| 7 | Demonstração (opcional) | Streamlit (#10) | ⏳ |
+| 8 | Análise crítica e limitações | Seções 6–7 | ⏳ |
+
+Sugestão: cada membro apresenta a parte que implementou.
