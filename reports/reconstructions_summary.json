@@ -1,0 +1,284 @@
+{
+  "fonte": "reconstruct_dataset() sobre validação (limiar) e teste oficial (visualização)",
+  "seed": 42,
+  "percentil_limiar": 95,
+  "escala_mapa_erro": [
+    0.0,
+    1.0
+  ],
+  "cenarios": {
+    "bag": {
+      "classe_anomala": "Bag",
+      "limiar": 0.0244,
+      "contagens": {
+        "TP": 710,
+        "FN": 290,
+        "FP": 475,
+        "TN": 8525
+      },
+      "por_grupo": {
+        "TP": {
+          "mse_mediana": 0.0336,
+          "intensidade_media": 0.3774,
+          "fundo_medio": 0.3923,
+          "objeto_mediana": 0.6059,
+          "mse_objeto_mediana": 0.0434,
+          "textura_mediana": 0.1784
+        },
+        "FN": {
+          "mse_mediana": 0.0204,
+          "intensidade_media": 0.295,
+          "fundo_medio": 0.4577,
+          "objeto_mediana": 0.537,
+          "mse_objeto_mediana": 0.0292,
+          "textura_mediana": 0.1404
+        },
+        "FP": {
+          "mse_mediana": 0.0306,
+          "intensidade_media": 0.2785,
+          "fundo_medio": 0.4617,
+          "objeto_mediana": 0.5383,
+          "mse_objeto_mediana": 0.0494,
+          "textura_mediana": 0.2292
+        },
+        "TN": {
+          "mse_mediana": 0.0074,
+          "intensidade_media": 0.2795,
+          "fundo_medio": 0.5124,
+          "objeto_mediana": 0.4911,
+          "mse_objeto_mediana": 0.0139,
+          "textura_mediana": 0.1463
+        }
+      },
+      "mse_objeto_acima_do_limiar": {
+        "FN": 0.7379,
+        "TN": 0.1995
+      },
+      "fp_por_classe": {
+        "T-shirt/top": {
+          "n": 62,
+          "taxa": 0.062
+        },
+        "Trouser": {
+          "n": 12,
+          "taxa": 0.012
+        },
+        "Pullover": {
+          "n": 48,
+          "taxa": 0.048
+        },
+        "Dress": {
+          "n": 48,
+          "taxa": 0.048
+        },
+        "Coat": {
+          "n": 36,
+          "taxa": 0.036
+        },
+        "Sandal": {
+          "n": 166,
+          "taxa": 0.166
+        },
+        "Shirt": {
+          "n": 77,
+          "taxa": 0.077
+        },
+        "Sneaker": {
+          "n": 8,
+          "taxa": 0.008
+        },
+        "Ankle boot": {
+          "n": 18,
+          "taxa": 0.018
+        }
+      },
+      "classe_normal_mais_proxima_latente": {
+        "FN": {
+          "T-shirt/top": 0.0586,
+          "Pullover": 0.131,
+          "Dress": 0.2138,
+          "Coat": 0.1172,
+          "Sandal": 0.1862,
+          "Shirt": 0.2655,
+          "Sneaker": 0.0207,
+          "Ankle boot": 0.0069
+        },
+        "TP": {
+          "T-shirt/top": 0.0296,
+          "Trouser": 0.0028,
+          "Pullover": 0.2352,
+          "Dress": 0.0662,
+          "Coat": 0.193,
+          "Sandal": 0.1042,
+          "Shirt": 0.2803,
+          "Sneaker": 0.0211,
+          "Ankle boot": 0.0676
+        }
+      },
+      "indices_teste": {
+        "fp_extremos": [
+          3953,
+          9067,
+          7348,
+          4392,
+          3485,
+          7279,
+          1878,
+          3192
+        ],
+        "fn_extremos": [
+          5114,
+          2476,
+          5395,
+          6441,
+          6314,
+          5148,
+          1455,
+          6492
+        ]
+      }
+    },
+    "sandal": {
+      "classe_anomala": "Sandal",
+      "limiar": 0.0246,
+      "contagens": {
+        "TP": 406,
+        "FN": 594,
+        "FP": 463,
+        "TN": 8537
+      },
+      "por_grupo": {
+        "TP": {
+          "mse_mediana": 0.0352,
+          "intensidade_media": 0.1776,
+          "fundo_medio": 0.6145,
+          "objeto_mediana": 0.389,
+          "mse_objeto_mediana": 0.0654,
+          "textura_mediana": 0.1812
+        },
+        "FN": {
+          "mse_mediana": 0.017,
+          "intensidade_media": 0.1081,
+          "fundo_medio": 0.7214,
+          "objeto_mediana": 0.2742,
+          "mse_objeto_mediana": 0.0439,
+          "textura_mediana": 0.1227
+        },
+        "FP": {
+          "mse_mediana": 0.0305,
+          "intensidade_media": 0.3331,
+          "fundo_medio": 0.395,
+          "objeto_mediana": 0.6071,
+          "mse_objeto_mediana": 0.0431,
+          "textura_mediana": 0.2357
+        },
+        "TN": {
+          "mse_mediana": 0.0075,
+          "intensidade_media": 0.302,
+          "fundo_medio": 0.4847,
+          "objeto_mediana": 0.537,
+          "mse_objeto_mediana": 0.0135,
+          "textura_mediana": 0.1481
+        }
+      },
+      "mse_objeto_acima_do_limiar": {
+        "FN": 0.9646,
+        "TN": 0.1355
+      },
+      "fp_por_classe": {
+        "T-shirt/top": {
+          "n": 55,
+          "taxa": 0.055
+        },
+        "Trouser": {
+          "n": 10,
+          "taxa": 0.01
+        },
+        "Pullover": {
+          "n": 46,
+          "taxa": 0.046
+        },
+        "Dress": {
+          "n": 45,
+          "taxa": 0.045
+        },
+        "Coat": {
+          "n": 39,
+          "taxa": 0.039
+        },
+        "Shirt": {
+          "n": 68,
+          "taxa": 0.068
+        },
+        "Sneaker": {
+          "n": 9,
+          "taxa": 0.009
+        },
+        "Bag": {
+          "n": 166,
+          "taxa": 0.166
+        },
+        "Ankle boot": {
+          "n": 25,
+          "taxa": 0.025
+        }
+      },
+      "classe_normal_mais_proxima_latente": {
+        "FN": {
+          "T-shirt/top": 0.0017,
+          "Pullover": 0.0168,
+          "Shirt": 0.0135,
+          "Sneaker": 0.8131,
+          "Bag": 0.0269,
+          "Ankle boot": 0.1279
+        },
+        "TP": {
+          "T-shirt/top": 0.0025,
+          "Pullover": 0.0246,
+          "Shirt": 0.0025,
+          "Sneaker": 0.2167,
+          "Bag": 0.0172,
+          "Ankle boot": 0.7365
+        }
+      },
+      "indices_teste": {
+        "fp_extremos": [
+          3953,
+          9067,
+          7348,
+          1286,
+          4392,
+          6191,
+          3485,
+          1878
+        ],
+        "fn_extremos": [
+          9264,
+          1747,
+          8303,
+          1953,
+          722,
+          3411,
+          4405,
+          1420
+        ]
+      }
+    }
+  },
+  "figuras": [
+    "reports/figures/falsos_negativos_bag.png",
+    "reports/figures/falsos_negativos_bag_amostra.png",
+    "reports/figures/falsos_negativos_sandal.png",
+    "reports/figures/falsos_negativos_sandal_amostra.png",
+    "reports/figures/falsos_positivos_bag.png",
+    "reports/figures/falsos_positivos_bag_amostra.png",
+    "reports/figures/falsos_positivos_sandal.png",
+    "reports/figures/falsos_positivos_sandal_amostra.png",
+    "reports/figures/recon_melhores_bag.png",
+    "reports/figures/recon_melhores_sandal.png",
+    "reports/figures/recon_piores_bag.png",
+    "reports/figures/recon_piores_sandal.png",
+    "reports/figures/recon_por_classe_bag.png",
+    "reports/figures/recon_por_classe_sandal.png"
+  ]
+}
